@@ -55,16 +55,13 @@
                            TextWrapping="Wrap"/>
             </Grid>
 
-            <Button Grid.Row="2"
-                    Margin="0,15,20,20"
-                    Width="120"
-                    Height="34"
-                    HorizontalAlignment="Right"
-                    Content="ОК"
-                    Background="#6C63FF"
-                    Foreground="White"
-                    BorderThickness="0"
-                    Click="BtnOk_Click"/>
+            <Grid Grid.Row="2" Margin="0,15,20,20" HorizontalAlignment="Right">
+                <Button x:Name="BtnOk" Width="120" Height="34" Content="ОК" Background="#6C63FF" Foreground="White" BorderThickness="0" Click="BtnOk_Click"/>
+                <StackPanel x:Name="PnlQuestion" Orientation="Horizontal" Visibility="Collapsed">
+                    <Button x:Name="BtnYes" Width="120" Height="34" Content="Да" Background="#6C63FF" Foreground="White" BorderThickness="0" Click="BtnYes_Click" Margin="0,0,10,0"/>
+                    <Button x:Name="BtnNo" Width="120" Height="34" Content="Нет" Background="#3A3C55" Foreground="White" BorderThickness="0" Click="BtnNo_Click"/>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Border>
 </Window>

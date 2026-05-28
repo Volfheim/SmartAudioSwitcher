@@ -57,11 +57,10 @@ namespace SmartAudioSwitcher.Core
                             return;
                         }
 
-                        var result = Application.Current.Dispatcher.Invoke(() => MessageBox.Show(
-                            $"Доступна новая версия: v{latestVersionStr}\nТекущая версия: v{currentVersion}\n\nХотите обновить приложение прямо сейчас?",
-                            "Обновление", MessageBoxButton.YesNo, MessageBoxImage.Question));
+                        var result = Application.Current.Dispatcher.Invoke(() => AppDialog.ShowQuestion(
+                            null, "Обновление", $"Доступна новая версия: v{latestVersionStr}\nТекущая версия: v{currentVersion}\n\nХотите обновить приложение прямо сейчас?"));
 
-                        if (result == MessageBoxResult.Yes)
+                        if (result)
                         {
                             await PerformUpdateAsync(downloadUrl, client);
                         }
@@ -81,12 +80,18 @@ namespace SmartAudioSwitcher.Core
 
         private static string? GetDownloadUrl(JsonElement root)
         {
+            var currentExePath = Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrEmpty(currentExePath)) return null;
+
+            bool isFull = new FileInfo(currentExePath).Length > 10 * 1024 * 1024;
+            string expectedAssetName = isFull ? "SmartAudioSwitcher_Full.exe" : "SmartAudioSwitcher.exe";
+
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
                 foreach (var asset in assets.EnumerateArray())
                 {
                     if (asset.TryGetProperty("name", out var nameElement) && 
-                        nameElement.GetString()?.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) == true)
+                        nameElement.GetString()?.Equals(expectedAssetName, StringComparison.OrdinalIgnoreCase) == true)
                     {
                         if (asset.TryGetProperty("browser_download_url", out var urlElement))
                         {
@@ -117,8 +122,10 @@ namespace SmartAudioSwitcher.Core
 
                 var batFile = Path.Combine(Path.GetTempPath(), "update_sas.bat");
                 var batContent = $@"@echo off
-timeout /t 2 /nobreak > nul
+:loop
+timeout /t 1 /nobreak > nul
 move /Y ""{tempExeFile}"" ""{currentExe}""
+if errorlevel 1 goto loop
 start """" ""{currentExe}""
 del ""%~f0""
 ";
@@ -132,7 +139,7 @@ del ""%~f0""
                 };
                 Process.Start(psi);
 
-                Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
+                Application.Current.Dispatcher.Invoke(() => Environment.Exit(0));
             }
             catch (Exception ex)
             {

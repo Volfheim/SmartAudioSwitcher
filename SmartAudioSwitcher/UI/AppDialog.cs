@@ -19,7 +19,12 @@ public static class AppDialog
         Show(owner, title, message, DialogVisualStyle.Error);
     }
 
-    private static void Show(Window? owner, string title, string message, DialogVisualStyle style)
+    public static bool ShowQuestion(Window? owner, string title, string message)
+    {
+        return Show(owner, title, message, DialogVisualStyle.Question);
+    }
+
+    private static bool Show(Window? owner, string title, string message, DialogVisualStyle style)
     {
         var dialog = new StyledMessageDialog(title, message, style);
 
@@ -29,6 +34,6 @@ public static class AppDialog
         }
 
         dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        dialog.ShowDialog();
+        return dialog.ShowDialog() == true;
     }
 }

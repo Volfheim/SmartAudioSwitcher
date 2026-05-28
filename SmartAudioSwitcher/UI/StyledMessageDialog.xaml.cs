@@ -8,7 +8,8 @@ public enum DialogVisualStyle
 {
     Info,
     Warning,
-    Error
+    Error,
+    Question
 }
 
 public partial class StyledMessageDialog : Window
@@ -19,6 +20,12 @@ public partial class StyledMessageDialog : Window
         LblTitle.Text = title;
         LblMessage.Text = message;
         SeverityMarker.Background = new SolidColorBrush(GetColor(style));
+
+        if (style == DialogVisualStyle.Question)
+        {
+            BtnOk.Visibility = Visibility.Collapsed;
+            PnlQuestion.Visibility = Visibility.Visible;
+        }
     }
 
     private static Color GetColor(DialogVisualStyle style)
@@ -27,6 +34,7 @@ public partial class StyledMessageDialog : Window
         {
             DialogVisualStyle.Warning => Color.FromRgb(255, 170, 0),
             DialogVisualStyle.Error => Color.FromRgb(237, 28, 36),
+            DialogVisualStyle.Question => Color.FromRgb(58, 191, 248),
             _ => Color.FromRgb(108, 99, 255)
         };
     }
@@ -37,8 +45,21 @@ public partial class StyledMessageDialog : Window
         Close();
     }
 
+    private void BtnYes_Click(object sender, RoutedEventArgs e)
+    {
+        DialogResult = true;
+        Close();
+    }
+
+    private void BtnNo_Click(object sender, RoutedEventArgs e)
+    {
+        DialogResult = false;
+        Close();
+    }
+
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
+        DialogResult = false;
         Close();
     }
 
