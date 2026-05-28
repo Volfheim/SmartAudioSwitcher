@@ -408,11 +408,10 @@
 
                             <Grid x:Name="ScenarioInputGrid"
                                   Grid.Row="1"
-                                  Margin="0,0,0,10"
-                                  SizeChanged="ScenarioInputGrid_SizeChanged">
+                                  Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1.4*"/>
+                                    <ColumnDefinition Width="1.1*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
@@ -441,9 +440,6 @@
 
                                 <ComboBox x:Name="CmbTargetDevice"
                                           Grid.Column="1"
-                                          Width="190"
-                                          MinWidth="180"
-                                          MaxWidth="560"
                                           Margin="0,0,5,0"
                                           DisplayMemberPath="Name"
                                           Foreground="White"

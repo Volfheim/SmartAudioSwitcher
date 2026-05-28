@@ -35,7 +35,6 @@ public partial class MainWindow : Window
     private bool _isRefreshingProcessList;
     private bool _isInitializing = true;
     private bool _exitRequested;
-    private TextBox? _processPickerEditor;
 
     private List<RunningApp> _runningAppsCache = new();
     private DateTime _runningAppsCacheUpdatedUtc = DateTime.MinValue;
@@ -106,16 +105,11 @@ public partial class MainWindow : Window
             CmbTargetDevice.SelectedIndex = 0;
         }
 
-        AttachProcessPickerTextHook();
-
         ChkFallback.IsChecked = _settings.AutoSwitchFallback;
         ChkAutoSwitch.IsChecked = _settings.AutoSwitchEnabled;
 
         RefreshScenarios();
         _autoSwitcher.UpdateSettings(_settings);
-        UpdateAdaptiveLayout();
-
-        UpdateAdaptiveLayout();
 
         UpdateHotkeyButton(BtnHotkeyMic, _settings.MicMuteHotkey, _settings.MicMuteModifiers);
         UpdateHotkeyButton(BtnHotkeyVolUp, _settings.VolUpHotkey, _settings.VolUpModifiers);
@@ -295,12 +289,6 @@ public partial class MainWindow : Window
 
     private void CmbTargetDevice_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing)
-        {
-            return;
-        }
-
-        UpdateAdaptiveLayout();
     }
 
     private void ChkAutoSwitch_Changed(object sender, RoutedEventArgs e)
@@ -538,7 +526,6 @@ public partial class MainWindow : Window
         CmbProcessPicker.SelectedItem = null;
         CmbProcessPicker.Text = string.Empty;
         CmbTargetDevice.SelectedItem = null;
-        UpdateAdaptiveLayout();
         RefreshScenarios();
         _autoSwitcher.UpdateSettings(_settings);
         PersistSettings();
@@ -549,137 +536,13 @@ public partial class MainWindow : Window
         if (sender is Button { Tag: AudioScenario scenario })
         {
             _settings.Scenarios.Remove(scenario);
-            UpdateAdaptiveLayout();
             RefreshScenarios();
             _autoSwitcher.UpdateSettings(_settings);
             PersistSettings();
         }
     }
 
-    private void AttachProcessPickerTextHook()
-    {
-        CmbProcessPicker.ApplyTemplate();
-        if (CmbProcessPicker.Template.FindName("PART_EditableTextBox", CmbProcessPicker) is not TextBox editor)
-        {
-            return;
-        }
 
-        if (ReferenceEquals(_processPickerEditor, editor))
-        {
-            return;
-        }
-
-        if (_processPickerEditor != null)
-        {
-            _processPickerEditor.TextChanged -= ProcessPickerEditor_TextChanged;
-        }
-
-        _processPickerEditor = editor;
-        _processPickerEditor.TextChanged += ProcessPickerEditor_TextChanged;
-    }
-
-    private void ProcessPickerEditor_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_isInitializing)
-        {
-            return;
-        }
-
-        UpdateAdaptiveLayout();
-    }
-
-    private void ScenarioInputGrid_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        if (_isInitializing || Math.Abs(e.NewSize.Width - e.PreviousSize.Width) < 0.5)
-        {
-            return;
-        }
-
-        UpdateAdaptiveLayout();
-    }
-
-    private void UpdateAdaptiveLayout()
-    {
-        var targetNames = new List<string>();
-
-        if (CmbTargetDevice.ItemsSource is IEnumerable<AudioDevice> devices)
-        {
-            targetNames.AddRange(devices.Select(d => d.Name));
-        }
-
-        targetNames.AddRange(_settings.Scenarios.Select(s => s.TargetDeviceName));
-
-        if (CmbTargetDevice.SelectedItem is AudioDevice selectedDevice)
-        {
-            targetNames.Add(selectedDevice.Name);
-        }
-
-        var longestTarget = targetNames
-            .Where(v => !string.IsNullOrWhiteSpace(v))
-            .OrderByDescending(v => v.Length)
-            .FirstOrDefault() ?? "Аудиовыход";
-
-        var desiredTargetWidth = Math.Clamp(EstimateWidth(longestTarget), MinAdaptiveTargetWidth, MaxAdaptiveTargetWidth);
-
-        var processNames = _settings.Scenarios
-            .Select(s => s.ProcessName)
-            .Where(v => !string.IsNullOrWhiteSpace(v))
-            .ToList();
-
-        if (!string.IsNullOrWhiteSpace(CmbProcessPicker.Text))
-        {
-            processNames.Add(CmbProcessPicker.Text);
-        }
-
-        var longestProcess = processNames
-            .OrderByDescending(v => v.Length)
-            .FirstOrDefault() ?? "process.exe";
-
-        var desiredProcessWidth = Math.Clamp(EstimateWidth(longestProcess), MinAdaptiveProcessWidth, MaxAdaptiveProcessWidth);
-        var addButtonWidth = BtnAddScenario.ActualWidth > 0
-            ? BtnAddScenario.ActualWidth
-            : (BtnAddScenario.Width > 0 ? BtnAddScenario.Width : 30);
-        var requiredScenarioInputs = desiredProcessWidth + desiredTargetWidth + addButtonWidth + ScenarioControlsSpacing;
-        var desiredWidth = ((requiredScenarioInputs + RightColumnChromeLoss) / RightColumnUsableRatio) + LayoutOuterMargin;
-
-        if (WindowState == WindowState.Normal)
-        {
-            // Ширина окна фиксируется на 1080px для предотвращения смещения правой панели при добавлении устройств.
-        }
-
-        var targetWidth = desiredTargetWidth;
-        var processWidth = desiredProcessWidth;
-
-        if (ScenarioInputGrid.ActualWidth > 0 && addButtonWidth > 0)
-        {
-            var availableInputs = ScenarioInputGrid.ActualWidth - addButtonWidth - ScenarioControlsSpacing;
-            if (availableInputs > 0)
-            {
-                targetWidth = Math.Min(desiredTargetWidth, Math.Max(140, availableInputs - MinAdaptiveProcessWidth));
-                processWidth = Math.Min(desiredProcessWidth, Math.Max(80, availableInputs - targetWidth));
-
-                if (processWidth < MinAdaptiveProcessWidth && targetWidth > 140)
-                {
-                    var rebalancedTarget = Math.Max(140, targetWidth - (MinAdaptiveProcessWidth - processWidth));
-                    processWidth = Math.Min(desiredProcessWidth, Math.Max(80, availableInputs - rebalancedTarget));
-                    targetWidth = rebalancedTarget;
-                }
-            }
-        }
-
-        CmbTargetDevice.Width = targetWidth;
-        CmbTargetDevice.MinWidth = Math.Min(140, targetWidth);
-        CmbTargetDevice.MaxWidth = MaxAdaptiveTargetWidth;
-
-        CmbProcessPicker.Width = processWidth;
-        CmbProcessPicker.MinWidth = Math.Min(160, processWidth);
-        CmbProcessPicker.MaxWidth = MaxAdaptiveProcessWidth;
-    }
-
-    private static double EstimateWidth(string text)
-    {
-        return 94 + (text.Length * 8.8);
-    }
 
     private static string NormalizeProcessName(string? value)
     {
@@ -891,7 +754,6 @@ public partial class MainWindow : Window
         if (CmbProcessPicker.SelectedItem is RunningApp app)
         {
             CmbProcessPicker.Text = app.ProcessName;
-            UpdateAdaptiveLayout();
         }
     }
 
