@@ -214,13 +214,12 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0.8*"/>
                     <ColumnDefinition Width="1.2*"/>
-
                 </Grid.ColumnDefinitions>
 
                 <Grid Grid.Column="0" Margin="0,0,10,0">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0" Background="{StaticResource PanelBackground}" CornerRadius="8" Padding="15,10,15,10" Margin="0,0,0,15">
@@ -253,7 +252,7 @@
                                                 </StackPanel>
                                                 <Button Grid.Row="0" Grid.Column="1" Content="X" Width="20" Height="20" Style="{StaticResource IconButtonStyle}" Foreground="{StaticResource DangerColor}" Tag="{Binding Id}" Click="BtnRemoveDevice_Click" VerticalAlignment="Center"/>
 
-                                                <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" SelectedValuePath="Id" SelectedValue="{Binding DeviceId, Mode=TwoWay}" DisplayMemberPath="Name" ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=AvailableDevices}" SelectionChanged="CmbDevice_SelectionChanged"/>
+                                                <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" SelectedValuePath="Id" SelectedValue="{Binding DeviceId, Mode=OneWay}" DisplayMemberPath="Name" ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=AvailableDevices}" SelectionChanged="CmbDevice_SelectionChanged"/>
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -265,61 +264,63 @@
                     </Border>
 
 
-                    <Border Grid.Row="1" Background="{StaticResource PanelBackground}" CornerRadius="8" Padding="15">
-                        <StackPanel>
-                            <TextBlock Text="Горячие клавиши" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,20"/>
+                    <Border Grid.Row="1" Background="{StaticResource PanelBackground}" CornerRadius="8" Padding="15" MaxHeight="300">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="Горячие клавиши" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,12"/>
 
 
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Микрофон:" VerticalAlignment="Center" Width="80"/>
-                                <Button x:Name="BtnHotkeyMic" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyMic_Click"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Громкость +:" VerticalAlignment="Center" Width="80"/>
-                                <Button x:Name="BtnHotkeyVolUp" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyVolUp_Click"/>
-                            </Grid>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Микрофон:" VerticalAlignment="Center" Width="80"/>
+                                    <Button x:Name="BtnHotkeyMic" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyMic_Click"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Громкость +:" VerticalAlignment="Center" Width="80"/>
+                                    <Button x:Name="BtnHotkeyVolUp" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyVolUp_Click"/>
+                                </Grid>
 
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Громкость -:" VerticalAlignment="Center" Width="80"/>
-                                <Button x:Name="BtnHotkeyVolDown" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyVolDown_Click"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Пред. трек:" VerticalAlignment="Center" Width="80"/>
-                                <Button x:Name="BtnHotkeyPrevTrack" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyPrevTrack_Click"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="След. трек:" VerticalAlignment="Center" Width="80"/>
-                                <Button x:Name="BtnHotkeyNextTrack" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyNextTrack_Click"/>
-                            </Grid>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Play / Pause:" VerticalAlignment="Center" Width="80"/>
-                                <Button x:Name="BtnHotkeyPlayPause" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyPlayPause_Click"/>
-                            </Grid>
-                        </StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Громкость -:" VerticalAlignment="Center" Width="80"/>
+                                    <Button x:Name="BtnHotkeyVolDown" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyVolDown_Click"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Пред. трек:" VerticalAlignment="Center" Width="80"/>
+                                    <Button x:Name="BtnHotkeyPrevTrack" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyPrevTrack_Click"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="След. трек:" VerticalAlignment="Center" Width="80"/>
+                                    <Button x:Name="BtnHotkeyNextTrack" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyNextTrack_Click"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Play / Pause:" VerticalAlignment="Center" Width="80"/>
+                                    <Button x:Name="BtnHotkeyPlayPause" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyPlayPause_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Border>
                 </Grid>
 

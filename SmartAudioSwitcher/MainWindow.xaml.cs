@@ -214,7 +214,14 @@ public partial class MainWindow : Window
     private void CmbDevice_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isInitializing) return;
-        PersistSettings();
+        if (sender is ComboBox comboBox && comboBox.DataContext is ManagedAudioDevice md)
+        {
+            if (comboBox.SelectedValue is string newId)
+            {
+                md.DeviceId = newId;
+                PersistSettings();
+            }
+        }
     }
 
     private void BtnAddDevice_Click(object sender, RoutedEventArgs e)

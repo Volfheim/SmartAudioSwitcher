@@ -21,9 +21,9 @@
     <Product>Smart Audio Switcher</Product>
     <Description>System utility for smart audio device switching</Description>
     <ApplicationIcon>app.ico</ApplicationIcon>
-    <Version>3.0.7</Version>
-    <AssemblyVersion>3.0.7</AssemblyVersion>
-    <FileVersion>3.0.7</FileVersion>
+    <Version>3.0.8</Version>
+    <AssemblyVersion>3.0.8</AssemblyVersion>
+    <FileVersion>3.0.8</FileVersion>
     <Copyright>Copyright © 2026 Volfheim</Copyright>
   </PropertyGroup>
 
