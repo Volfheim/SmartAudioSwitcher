@@ -251,12 +251,37 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ResetHotkeyCapturingStates()
+    {
+        _capturingDeviceId = null;
+        _isCapturingMicKey = false;
+        _isCapturingVolUpKey = false;
+        _isCapturingVolDownKey = false;
+        _isCapturingPrevTrackKey = false;
+        _isCapturingNextTrackKey = false;
+        _isCapturingPlayPauseKey = false;
+
+        PreviewKeyDown -= MainWindow_KeyDown;
+        KeyDown -= MainWindow_KeyDown;
+
+        UpdateHotkeyButton(BtnHotkeyMic, _settings.MicMuteHotkey, _settings.MicMuteModifiers);
+        UpdateHotkeyButton(BtnHotkeyVolUp, _settings.VolUpHotkey, _settings.VolUpModifiers);
+        UpdateHotkeyButton(BtnHotkeyVolDown, _settings.VolDownHotkey, _settings.VolDownModifiers);
+        UpdateHotkeyButton(BtnHotkeyPrevTrack, _settings.PrevTrackHotkey, _settings.PrevTrackModifiers);
+        UpdateHotkeyButton(BtnHotkeyNextTrack, _settings.NextTrackHotkey, _settings.NextTrackModifiers);
+        UpdateHotkeyButton(BtnHotkeyPlayPause, _settings.PlayPauseHotkey, _settings.PlayPauseModifiers);
+
+        LoadDevices();
+    }
+
     private void BtnHotkeyDevice_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { Tag: string id } btn)
         {
+            ResetHotkeyCapturingStates();
             _capturingDeviceId = id;
-            KeyDown += MainWindow_KeyDown;
+            btn.Content = "Нажмите клавиши...";
+            PreviewKeyDown += MainWindow_KeyDown;
         }
     }
 
@@ -611,7 +636,7 @@ public partial class MainWindow : Window
 
         if (WindowState == WindowState.Normal)
         {
-            Width = Math.Clamp(Math.Max(BaseAdaptiveWidth, desiredWidth), BaseAdaptiveWidth, MaxAdaptiveWidth);
+            // Ширина окна фиксируется на 1080px для предотвращения смещения правой панели при добавлении устройств.
         }
 
         var targetWidth = desiredTargetWidth;
@@ -675,44 +700,50 @@ public partial class MainWindow : Window
 
     private void BtnHotkeyMic_Click(object sender, RoutedEventArgs e)
     {
+        ResetHotkeyCapturingStates();
         BtnHotkeyMic.Content = "Нажмите клавиши...";
         _isCapturingMicKey = true;
-        KeyDown += MainWindow_KeyDown;
+        PreviewKeyDown += MainWindow_KeyDown;
     }
 
     private void BtnHotkeyVolUp_Click(object sender, RoutedEventArgs e)
     {
+        ResetHotkeyCapturingStates();
         BtnHotkeyVolUp.Content = "Нажмите клавиши...";
         _isCapturingVolUpKey = true;
-        KeyDown += MainWindow_KeyDown;
+        PreviewKeyDown += MainWindow_KeyDown;
     }
 
     private void BtnHotkeyVolDown_Click(object sender, RoutedEventArgs e)
     {
+        ResetHotkeyCapturingStates();
         BtnHotkeyVolDown.Content = "Нажмите клавиши...";
         _isCapturingVolDownKey = true;
-        KeyDown += MainWindow_KeyDown;
+        PreviewKeyDown += MainWindow_KeyDown;
     }
 
     private void BtnHotkeyPrevTrack_Click(object sender, RoutedEventArgs e)
     {
+        ResetHotkeyCapturingStates();
         BtnHotkeyPrevTrack.Content = "Нажмите клавиши...";
         _isCapturingPrevTrackKey = true;
-        KeyDown += MainWindow_KeyDown;
+        PreviewKeyDown += MainWindow_KeyDown;
     }
 
     private void BtnHotkeyNextTrack_Click(object sender, RoutedEventArgs e)
     {
+        ResetHotkeyCapturingStates();
         BtnHotkeyNextTrack.Content = "Нажмите клавиши...";
         _isCapturingNextTrackKey = true;
-        KeyDown += MainWindow_KeyDown;
+        PreviewKeyDown += MainWindow_KeyDown;
     }
 
     private void BtnHotkeyPlayPause_Click(object sender, RoutedEventArgs e)
     {
+        ResetHotkeyCapturingStates();
         BtnHotkeyPlayPause.Content = "Нажмите клавиши...";
         _isCapturingPlayPauseKey = true;
-        KeyDown += MainWindow_KeyDown;
+        PreviewKeyDown += MainWindow_KeyDown;
     }
 
 
@@ -723,22 +754,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        e.Handled = true;
+
         if (e.Key == Key.Escape)
         {
-            _capturingDeviceId = null;
-            _isCapturingMicKey = false;
-            _isCapturingVolUpKey = false;
-            _isCapturingVolDownKey = false;
-            _isCapturingPrevTrackKey = false;
-            _isCapturingNextTrackKey = false;
-            _isCapturingPlayPauseKey = false;
-            UpdateHotkeyButton(BtnHotkeyMic, _settings.MicMuteHotkey, _settings.MicMuteModifiers);
-            UpdateHotkeyButton(BtnHotkeyVolUp, _settings.VolUpHotkey, _settings.VolUpModifiers);
-            UpdateHotkeyButton(BtnHotkeyVolDown, _settings.VolDownHotkey, _settings.VolDownModifiers);
-            UpdateHotkeyButton(BtnHotkeyPrevTrack, _settings.PrevTrackHotkey, _settings.PrevTrackModifiers);
-            UpdateHotkeyButton(BtnHotkeyNextTrack, _settings.NextTrackHotkey, _settings.NextTrackModifiers);
-            UpdateHotkeyButton(BtnHotkeyPlayPause, _settings.PlayPauseHotkey, _settings.PlayPauseModifiers);
-            KeyDown -= MainWindow_KeyDown;
+            ResetHotkeyCapturingStates();
             return;
         }
 
@@ -765,54 +785,41 @@ public partial class MainWindow : Window
                 device.Hotkey = vk;
                 device.Modifiers = mods;
             }
-            _capturingDeviceId = null;
         }
         else if (_isCapturingMicKey)
         {
             _settings.MicMuteHotkey = vk;
             _settings.MicMuteModifiers = mods;
-            UpdateHotkeyButton(BtnHotkeyMic, vk, mods);
-            _isCapturingMicKey = false;
         }
         else if (_isCapturingVolUpKey)
         {
             _settings.VolUpHotkey = vk;
             _settings.VolUpModifiers = mods;
-            UpdateHotkeyButton(BtnHotkeyVolUp, vk, mods);
-            _isCapturingVolUpKey = false;
         }
         else if (_isCapturingVolDownKey)
         {
             _settings.VolDownHotkey = vk;
             _settings.VolDownModifiers = mods;
-            UpdateHotkeyButton(BtnHotkeyVolDown, vk, mods);
-            _isCapturingVolDownKey = false;
         }
         else if (_isCapturingPrevTrackKey)
         {
             _settings.PrevTrackHotkey = vk;
             _settings.PrevTrackModifiers = mods;
-            UpdateHotkeyButton(BtnHotkeyPrevTrack, vk, mods);
-            _isCapturingPrevTrackKey = false;
         }
         else if (_isCapturingNextTrackKey)
         {
             _settings.NextTrackHotkey = vk;
             _settings.NextTrackModifiers = mods;
-            UpdateHotkeyButton(BtnHotkeyNextTrack, vk, mods);
-            _isCapturingNextTrackKey = false;
         }
         else if (_isCapturingPlayPauseKey)
         {
             _settings.PlayPauseHotkey = vk;
             _settings.PlayPauseModifiers = mods;
-            UpdateHotkeyButton(BtnHotkeyPlayPause, vk, mods);
-            _isCapturingPlayPauseKey = false;
         }
 
         _appController.RegisterHotkeys();
         PersistSettings();
-        KeyDown -= MainWindow_KeyDown;
+        ResetHotkeyCapturingStates();
     }
 
 

@@ -53,7 +53,31 @@ public class AppSettings
     public static AppSettings Load()
     {
         if (!System.IO.File.Exists(SettingsPath))
-            return new AppSettings();
+        {
+            var defaultSettings = new AppSettings();
+            defaultSettings.Devices.Add(new ManagedAudioDevice
+            {
+                Id = Guid.NewGuid().ToString(),
+                DeviceId = string.Empty,
+                CustomName = "Наушники",
+                Hotkey = 72, // H
+                Modifiers = 1 // Alt
+            });
+            defaultSettings.Devices.Add(new ManagedAudioDevice
+            {
+                Id = Guid.NewGuid().ToString(),
+                DeviceId = string.Empty,
+                CustomName = "Колонки",
+                Hotkey = 83, // S
+                Modifiers = 1 // Alt
+            });
+            try
+            {
+                defaultSettings.Save();
+            }
+            catch { }
+            return defaultSettings;
+        }
 
         try
         {
