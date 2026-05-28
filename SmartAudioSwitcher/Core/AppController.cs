@@ -15,9 +15,8 @@ public class AppController : IDisposable
     private readonly AutoSwitcher _autoSwitcher;
     private HotKeyManager? _hotKeyManager;
     private MicOverlayWindow? _micOverlay;
+    private readonly Dictionary<int, ManagedAudioDevice> _deviceHotkeyMap = new();
 
-    private const int ID_HEADSET = 1;
-    private const int ID_SPEAKERS = 2;
     private const int ID_MIC_MUTE = 3;
     private const int ID_VOL_UP = 4;
     private const int ID_VOL_DOWN = 5;
@@ -51,12 +50,20 @@ public class AppController : IDisposable
     {
         if (_hotKeyManager == null) return;
         _hotKeyManager.UnregisterAll();
+        _deviceHotkeyMap.Clear();
 
-        if (_settings.HeadsetHotkey > 0)
-            _hotKeyManager.Register(ID_HEADSET, _settings.HeadsetHotkey, (KeyModifiers)_settings.HeadsetModifiers, out _);
-
-        if (_settings.SpeakerHotkey > 0)
-            _hotKeyManager.Register(ID_SPEAKERS, _settings.SpeakerHotkey, (KeyModifiers)_settings.SpeakerModifiers, out _);
+        int deviceIdCounter = 100;
+        foreach (var device in _settings.Devices)
+        {
+            if (device.Hotkey > 0)
+            {
+                int id = deviceIdCounter++;
+                if (_hotKeyManager.Register(id, device.Hotkey, (KeyModifiers)device.Modifiers, out _))
+                {
+                    _deviceHotkeyMap[id] = device;
+                }
+            }
+        }
 
         if (_settings.MicMuteHotkey > 0)
             _hotKeyManager.Register(ID_MIC_MUTE, _settings.MicMuteHotkey, (KeyModifiers)_settings.MicMuteModifiers, out _);
@@ -129,22 +136,25 @@ public class AppController : IDisposable
             return;
         }
 
-        var targetId = id == ID_HEADSET ? _settings.HeadsetDeviceId : _settings.SpeakerDeviceId;
-        if (string.IsNullOrWhiteSpace(targetId)) return;
+        if (_deviceHotkeyMap.TryGetValue(id, out var device))
+        {
+            if (string.IsNullOrWhiteSpace(device.DeviceId)) return;
 
-        try
-        {
-            AudioDeviceManager.SetDefaultDevice(targetId);
-            if (_settings.ShowNotifications)
+            try
             {
-                ShowNotification?.Invoke(
-                    id == ID_HEADSET ? "Переключено на наушники." : "Переключено на колонки.",
-                    "Smart Audio Switcher");
+                AudioDeviceManager.SetDefaultDevice(device.DeviceId);
+                if (_settings.ShowNotifications)
+                {
+                    ShowNotification?.Invoke(
+                        $"Переключено на: {device.CustomName}",
+                        "Smart Audio Switcher");
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error switching device: {ex.Message}");
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error switching device: {ex.Message}");
+            }
+            return;
         }
     }
 

@@ -14,7 +14,7 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        ResizeMode="CanResizeWithGrip"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Icon="pack://application:,,,/app.ico">
 
@@ -224,21 +224,44 @@
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0" Background="{StaticResource PanelBackground}" CornerRadius="8" Padding="15,10,15,10" Margin="0,0,0,15">
-                        <StackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                            <TextBlock Text="Аудио устройства" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="0" Text="Управляемые аудиоустройства" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
 
-                            <TextBlock Text="Наушники" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
-                            <ComboBox x:Name="CmbHeadset"
-                                      Margin="0,2,0,8"
-                                      DisplayMemberPath="Name"
-                                      SelectionChanged="CmbHeadset_SelectionChanged"/>
-                            <TextBlock Text="Колонки" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
-                            <ComboBox x:Name="CmbSpeakers"
-                                      Margin="0,2,0,0"
-                                      DisplayMemberPath="Name"
-                                      SelectionChanged="CmbSpeakers_SelectionChanged"/>
-                        </StackPanel>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="DevicesList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,4">
+                                                    <TextBox Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" Width="150" Background="Transparent" Foreground="White" BorderThickness="0" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                                    <Button Content="{Binding HotkeyDisplay}" Tag="{Binding Id}" Click="BtnHotkeyDevice_Click" Style="{StaticResource ModernButton}" FontSize="11" Padding="5,2" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <Button Grid.Row="0" Grid.Column="1" Content="X" Width="20" Height="20" Style="{StaticResource IconButtonStyle}" Foreground="{StaticResource DangerColor}" Tag="{Binding Id}" Click="BtnRemoveDevice_Click" VerticalAlignment="Center"/>
+
+                                                <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" SelectedValuePath="Id" SelectedValue="{Binding DeviceId, Mode=TwoWay}" DisplayMemberPath="Name" ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=AvailableDevices}" SelectionChanged="CmbDevice_SelectionChanged"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <Button Grid.Row="2" Content="+ Добавить устройство" Style="{StaticResource ModernButton}" Click="BtnAddDevice_Click" Margin="0,10,0,0" HorizontalAlignment="Left"/>
+                        </Grid>
                     </Border>
 
 
@@ -246,22 +269,7 @@
                         <StackPanel>
                             <TextBlock Text="Горячие клавиши" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,20"/>
 
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Наушники:" VerticalAlignment="Center" Width="80"/>
-                                <Button x:Name="BtnHotkeyHeadset" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeyHeadset_Click"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Колонки:" VerticalAlignment="Center" Width="80"/>
-                                <Button x:Name="BtnHotkeySpeakers" Content="Назначить" Grid.Column="1" Style="{StaticResource ModernButton}" Click="BtnHotkeySpeakers_Click"/>
-                            </Grid>
+
                             <Grid Margin="0,0,0,20">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
