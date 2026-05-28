@@ -1,0 +1,20 @@
+<Window x:Class="SmartAudioSwitcher.UI.MicOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MicOverlay" Height="40" Width="40"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False">
+    <Grid>
+        <Border x:Name="OverlayBorder" Background="#50444444" CornerRadius="16" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid Width="24" Height="24">
+                    <!-- Clean Microphone Capsule and Stand -->
+                    <Path Data="M12,14c-1.66,0-3-1.34-3-3V5c0-1.66,1.34-3,3-3s3,1.34,3,3v6C15,12.66,13.66,14,12,14z M17,11c0,2.76-2.24,5-5,5s-5-2.24-5-5H5c0,3.53,2.61,6.43,6,6.92V21h2v-3.08c3.39-0.49,6-3.39,6-6.92H17z" 
+                          Fill="#E0FFFFFF" />
+                    <!-- Bold Red Slash -->
+                    <Line X1="2" Y1="2" X2="22" Y2="22" Stroke="#FF4444" StrokeThickness="3" StrokeEndLineCap="Round" StrokeStartLineCap="Round" />
+                </Grid>
+            </Viewbox>
+        </Border>
+    </Grid>
+</Window>
