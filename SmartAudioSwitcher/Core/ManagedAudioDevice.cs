@@ -10,6 +10,7 @@ public class ManagedAudioDevice : INotifyPropertyChanged
     private string _customName = string.Empty;
     private int _hotkey = 0;
     private int _modifiers = 0;
+    private bool _isDeletable = true;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -71,5 +72,12 @@ public class ManagedAudioDevice : INotifyPropertyChanged
                 return $"VK:{Hotkey}";
             }
         }
+    }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsDeletable
+    {
+        get => _isDeletable;
+        set { if (_isDeletable != value) { _isDeletable = value; OnPropertyChanged(); } }
     }
 }

@@ -19,6 +19,7 @@
         Icon="pack://application:,,,/app.ico">
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <SolidColorBrush x:Key="WindowBackground" Color="#1E1E2E"/>
         <SolidColorBrush x:Key="PanelBackground" Color="#2B2D42"/>
         <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
@@ -236,24 +237,64 @@
                                 <ItemsControl x:Name="DevicesList">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Margin="0,0,0,10">
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto"/>
-                                                    <RowDefinition Height="Auto"/>
-                                                </Grid.RowDefinitions>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
+                                            <Border Background="#222436" BorderBrush="#363954" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="8"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
 
-                                                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,4">
-                                                    <TextBox Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" Width="150" Background="Transparent" Foreground="White" BorderThickness="0" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                                    <Button Content="{Binding HotkeyDisplay}" Tag="{Binding Id}" Click="BtnHotkeyDevice_Click" Style="{StaticResource ModernButton}" FontSize="11" Padding="5,2" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                                <Button Grid.Row="0" Grid.Column="1" Content="X" Width="20" Height="20" Style="{StaticResource IconButtonStyle}" Foreground="{StaticResource DangerColor}" Tag="{Binding Id}" Click="BtnRemoveDevice_Click" VerticalAlignment="Center"/>
+                                                    <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBox Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" 
+                                                                 Width="140" 
+                                                                 Background="Transparent" 
+                                                                 Foreground="White" 
+                                                                 FontWeight="SemiBold"
+                                                                 BorderThickness="0,0,0,1" 
+                                                                 BorderBrush="#33FFFFFF"
+                                                                 Margin="0,0,10,0" 
+                                                                 VerticalAlignment="Center"
+                                                                 ToolTip="Изменить имя устройства"/>
+                                                        <Button Content="{Binding HotkeyDisplay}" 
+                                                                Tag="{Binding Id}" 
+                                                                Click="BtnHotkeyDevice_Click" 
+                                                                Style="{StaticResource ModernButton}" 
+                                                                FontSize="10" 
+                                                                Padding="6,3" 
+                                                                VerticalAlignment="Center"
+                                                                ToolTip="Назначить горячую клавишу"/>
+                                                    </StackPanel>
 
-                                                <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" SelectedValuePath="Id" SelectedValue="{Binding DeviceId, Mode=OneWay}" DisplayMemberPath="Name" ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=AvailableDevices}" SelectionChanged="CmbDevice_SelectionChanged"/>
-                                            </Grid>
+                                                    <Button Grid.Row="0" Grid.Column="1" 
+                                                            Width="20" Height="20" 
+                                                            Style="{StaticResource IconButtonStyle}" 
+                                                            Foreground="{StaticResource DangerColor}" 
+                                                            Tag="{Binding Id}" 
+                                                            Click="BtnRemoveDevice_Click" 
+                                                            VerticalAlignment="Center"
+                                                            Visibility="{Binding IsDeletable, Converter={StaticResource BoolToVis}}"
+                                                            ToolTip="Удалить устройство">
+                                                        <Path Data="M 0,0 L 8,8 M 8,0 L 0,8" 
+                                                              Stroke="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" 
+                                                              StrokeThickness="1.8" 
+                                                              HorizontalAlignment="Center" 
+                                                              VerticalAlignment="Center" 
+                                                              Width="8" Height="8"/>
+                                                    </Button>
+
+                                                    <ComboBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" 
+                                                              SelectedValuePath="Id" 
+                                                              SelectedValue="{Binding DeviceId, Mode=OneWay}" 
+                                                              DisplayMemberPath="Name" 
+                                                              ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=AvailableDevices}" 
+                                                              SelectionChanged="CmbDevice_SelectionChanged"/>
+                                                </Grid>
+                                            </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

@@ -158,6 +158,11 @@ public partial class MainWindow : Window
 
         var targetId = (CmbTargetDevice.SelectedItem as AudioDevice)?.Id;
         
+        for (int i = 0; i < _settings.Devices.Count; i++)
+        {
+            _settings.Devices[i].IsDeletable = (i >= 2);
+        }
+
         CmbTargetDevice.ItemsSource = AvailableDevices;
         DevicesList.ItemsSource = null;
         DevicesList.ItemsSource = _settings.Devices;
@@ -236,7 +241,7 @@ public partial class MainWindow : Window
         if (sender is Button { Tag: string id })
         {
             var device = _settings.Devices.FirstOrDefault(d => d.Id == id);
-            if (device != null)
+            if (device != null && device.IsDeletable)
             {
                 _settings.Devices.Remove(device);
                 _appController.RegisterHotkeys();
