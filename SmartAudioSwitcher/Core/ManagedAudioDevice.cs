@@ -11,12 +11,28 @@ public class ManagedAudioDevice : INotifyPropertyChanged
     private int _hotkey = 0;
     private int _modifiers = 0;
     private bool _isDeletable = true;
+    private bool _isCapturing = false;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsCapturing
+    {
+        get => _isCapturing;
+        set 
+        { 
+            if (_isCapturing != value) 
+            { 
+                _isCapturing = value; 
+                OnPropertyChanged(); 
+                OnPropertyChanged(nameof(HotkeyDisplay)); 
+            } 
+        }
     }
 
     public string Id
@@ -54,6 +70,7 @@ public class ManagedAudioDevice : INotifyPropertyChanged
     {
         get
         {
+            if (IsCapturing) return "Нажмите клавиши...";
             if (Hotkey <= 0) return "Назначить";
             
             try

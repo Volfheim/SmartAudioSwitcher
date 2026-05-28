@@ -264,24 +264,32 @@ public partial class MainWindow : Window
         PreviewKeyDown -= MainWindow_KeyDown;
         KeyDown -= MainWindow_KeyDown;
 
+        foreach (var device in _settings.Devices)
+        {
+            device.IsCapturing = false;
+        }
+
         UpdateHotkeyButton(BtnHotkeyMic, _settings.MicMuteHotkey, _settings.MicMuteModifiers);
         UpdateHotkeyButton(BtnHotkeyVolUp, _settings.VolUpHotkey, _settings.VolUpModifiers);
         UpdateHotkeyButton(BtnHotkeyVolDown, _settings.VolDownHotkey, _settings.VolDownModifiers);
         UpdateHotkeyButton(BtnHotkeyPrevTrack, _settings.PrevTrackHotkey, _settings.PrevTrackModifiers);
         UpdateHotkeyButton(BtnHotkeyNextTrack, _settings.NextTrackHotkey, _settings.NextTrackModifiers);
         UpdateHotkeyButton(BtnHotkeyPlayPause, _settings.PlayPauseHotkey, _settings.PlayPauseModifiers);
-
-        LoadDevices();
     }
 
     private void BtnHotkeyDevice_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: string id } btn)
+        if (sender is Button { Tag: string id })
         {
             ResetHotkeyCapturingStates();
-            _capturingDeviceId = id;
-            btn.Content = "Нажмите клавиши...";
-            PreviewKeyDown += MainWindow_KeyDown;
+            
+            var device = _settings.Devices.FirstOrDefault(d => d.Id == id);
+            if (device != null)
+            {
+                _capturingDeviceId = id;
+                device.IsCapturing = true;
+                PreviewKeyDown += MainWindow_KeyDown;
+            }
         }
     }
 
