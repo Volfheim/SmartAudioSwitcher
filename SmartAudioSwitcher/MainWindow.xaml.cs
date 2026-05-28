@@ -336,6 +336,11 @@ public partial class MainWindow : Window
         OpenSettingsWindow();
     }
 
+    private void MenuItemUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        _ = AutoUpdater.CheckForUpdatesAsync(true);
+    }
+
     private void MenuItemExit_Click(object sender, RoutedEventArgs e)
     {
         _exitRequested = true;

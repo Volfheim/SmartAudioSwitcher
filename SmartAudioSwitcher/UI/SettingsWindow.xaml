@@ -84,16 +84,24 @@
                            FontSize="12"/>
             </StackPanel>
 
-            <Button Grid.Row="2"
-                    Margin="0,15,20,20"
-                    Width="120"
-                    Height="34"
-                    HorizontalAlignment="Right"
-                    Content="Закрыть"
-                    Background="#6C63FF"
-                    Foreground="White"
-                    BorderThickness="0"
-                    Click="BtnClose_Click"/>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,20,20">
+                <Button x:Name="BtnUpdateCheck"
+                        Margin="0,0,10,0"
+                        Width="160"
+                        Height="34"
+                        Content="Проверить обновления"
+                        Background="#3A3C55"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Click="BtnUpdateCheck_Click"/>
+                <Button Width="120"
+                        Height="34"
+                        Content="Закрыть"
+                        Background="#6C63FF"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Click="BtnClose_Click"/>
+            </StackPanel>
         </Grid>
     </Border>
 </Window>

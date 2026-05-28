@@ -482,6 +482,7 @@
                     <ContextMenu>
                         <MenuItem Header="Открыть" Click="MenuItemOpen_Click"/>
                         <MenuItem Header="Настройки" Click="MenuItemSettings_Click"/>
+                        <MenuItem Header="Проверить обновления" Click="MenuItemUpdate_Click"/>
                         <Separator Style="{StaticResource ContextMenuSeparator}"/>
                         <MenuItem Header="Выход" Click="MenuItemExit_Click" Foreground="#FF6B6B"/>
                     </ContextMenu>

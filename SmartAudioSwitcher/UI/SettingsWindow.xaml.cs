@@ -57,4 +57,9 @@ public partial class SettingsWindow : Window
     {
         Close();
     }
+
+    private void BtnUpdateCheck_Click(object sender, RoutedEventArgs e)
+    {
+        _ = Core.AutoUpdater.CheckForUpdatesAsync(true);
+    }
 }
