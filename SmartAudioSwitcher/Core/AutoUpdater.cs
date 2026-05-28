@@ -40,35 +40,32 @@ namespace SmartAudioSwitcher.Core
 
                 if (!root.TryGetProperty("tag_name", out var tagElement)) return;
                 
-                var latestVersionStr = tagElement.GetString()?.TrimStart('v', 'V');
+                var latestVersionStr = tagElement.GetString();
                 if (string.IsNullOrEmpty(latestVersionStr)) return;
 
-                var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-                if (currentVersion == null) return;
+                var latestVersion = ParseNormalizedVersion(latestVersionStr);
+                var currentVersion = ParseNormalizedVersion(Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0.0");
 
-                if (Version.TryParse(latestVersionStr, out var latestVersion))
+                if (latestVersion > currentVersion)
                 {
-                    if (latestVersion > currentVersion)
+                    var downloadUrl = GetDownloadUrl(root);
+                    if (string.IsNullOrEmpty(downloadUrl))
                     {
-                        var downloadUrl = GetDownloadUrl(root);
-                        if (string.IsNullOrEmpty(downloadUrl))
-                        {
-                            Application.Current.Dispatcher.Invoke(() => AppDialog.ShowWarning(null, "Ошибка", "Найдена новая версия, но файл для скачивания (Asset) не найден."));
-                            return;
-                        }
-
-                        var result = Application.Current.Dispatcher.Invoke(() => AppDialog.ShowQuestion(
-                            null, "Обновление", $"Доступна новая версия: v{latestVersionStr}\nТекущая версия: v{currentVersion}\n\nХотите обновить приложение прямо сейчас?"));
-
-                        if (result)
-                        {
-                            await PerformUpdateAsync(downloadUrl, client);
-                        }
+                        Application.Current.Dispatcher.Invoke(() => AppDialog.ShowWarning(null, "Ошибка", "Найдена новая версия, но файл для скачивания (Asset) не найден."));
+                        return;
                     }
-                    else if (showUpToDateMessage)
+
+                    var result = Application.Current.Dispatcher.Invoke(() => AppDialog.ShowQuestion(
+                        null, "Обновление", $"Доступна новая версия: v{latestVersionStr}\nТекущая версия: v{currentVersion}\n\nХотите обновить приложение прямо сейчас?"));
+
+                    if (result)
                     {
-                        Application.Current.Dispatcher.Invoke(() => AppDialog.ShowInfo(null, "Обновление", "У вас установлена самая последняя версия приложения!"));
+                        await PerformUpdateAsync(downloadUrl, client);
                     }
+                }
+                else if (showUpToDateMessage)
+                {
+                    Application.Current.Dispatcher.Invoke(() => AppDialog.ShowInfo(null, "Обновление", "У вас установлена самая последняя версия приложения!"));
                 }
             }
             catch (Exception ex)
@@ -76,6 +73,21 @@ namespace SmartAudioSwitcher.Core
                 if (showUpToDateMessage)
                     Application.Current.Dispatcher.Invoke(() => AppDialog.ShowError(null, "Ошибка", $"Ошибка проверки обновлений:\n{ex.Message}"));
             }
+        }
+
+        private static Version ParseNormalizedVersion(string versionStr)
+        {
+            var clean = versionStr.TrimStart('v', 'V').Trim();
+            if (Version.TryParse(clean, out var v))
+            {
+                return new Version(
+                    v.Major,
+                    v.Minor,
+                    v.Build >= 0 ? v.Build : 0,
+                    v.Revision >= 0 ? v.Revision : 0
+                );
+            }
+            return new Version(0, 0, 0, 0);
         }
 
         private static string? GetDownloadUrl(JsonElement root)
@@ -120,20 +132,67 @@ namespace SmartAudioSwitcher.Core
                 var currentExe = Process.GetCurrentProcess().MainModule?.FileName;
                 if (string.IsNullOrEmpty(currentExe)) return;
 
+                var currentPid = Process.GetCurrentProcess().Id;
                 var batFile = Path.Combine(Path.GetTempPath(), "update_sas.bat");
+                var logFile = Path.Combine(Path.GetTempPath(), "sas_update.log");
+
                 var batContent = $@"@echo off
-:loop
-timeout /t 1 /nobreak > nul
-move /Y ""{tempExeFile}"" ""{currentExe}""
-if errorlevel 1 goto loop
-start """" ""{currentExe}""
-del ""%~f0""
+setlocal enableextensions
+set ""PID={currentPid}""
+set ""DOWNLOADED={tempExeFile}""
+set ""FINAL={currentExe}""
+set ""LOG={logFile}""
+
+echo [%date% %time%] Updater script started >> ""%LOG%""
+
+:: Ожидаем завершения процесса приложения (до 10 секунд)
+for /L %%A in (1,1,10) do (
+  tasklist /FI ""PID eq %PID%"" 2>NUL | find ""%PID%"" >NUL
+  if errorlevel 1 goto wait_done
+  timeout /t 1 /nobreak >NUL
+)
+
+:: Если процесс все еще запущен, принудительно убиваем его
+tasklist /FI ""PID eq %PID%"" 2>NUL | find ""%PID%"" >NUL
+if not errorlevel 1 (
+  echo [%date% %time%] Killing process %PID% >> ""%LOG%""
+  taskkill /PID %PID% /F >NUL 2>&1
+  timeout /t 1 /nobreak >NUL
+)
+
+:wait_done
+if not exist ""%DOWNLOADED%"" (
+  echo [%date% %time%] Downloaded file not found >> ""%LOG%""
+  goto cleanup
+)
+
+:: Копируем новый файл с повторными попытками в случае блокировок
+for /L %%C in (1,1,5) do (
+  copy /Y ""%DOWNLOADED%"" ""%FINAL%"" >NUL
+  if not errorlevel 1 goto copy_success
+  timeout /t 1 /nobreak >NUL
+)
+
+echo [%date% %time%] Copy to final location failed >> ""%LOG%""
+goto cleanup
+
+:copy_success
+echo [%date% %time%] Successfully updated, starting application >> ""%LOG%""
+start """" ""%FINAL%""
+del ""%DOWNLOADED%"" >NUL 2>&1
+
+:cleanup
+echo [%date% %time%] Updater finished >> ""%LOG%""
+(goto) 2>NUL & del ""%~f0""
+endlocal
+exit /b 0
 ";
                 File.WriteAllText(batFile, batContent);
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = batFile,
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"{batFile}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
