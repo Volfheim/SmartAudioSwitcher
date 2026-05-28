@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace SmartAudioSwitcher.Core;
@@ -6,6 +8,9 @@ public class AppSettings
 {
     private static readonly string SettingsPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SmartAudioSwitcher", "settings.json");
 
+    public List<ManagedAudioDevice> Devices { get; set; } = new();
+
+    // Старые поля оставлены для обратной совместимости (миграции)
     public string HeadsetDeviceId { get; set; } = string.Empty;
     public string HeadsetDeviceName { get; set; } = string.Empty;
     public string SpeakerDeviceId { get; set; } = string.Empty;
@@ -14,6 +19,7 @@ public class AppSettings
     public int HeadsetModifiers { get; set; } = 1; // Alt
     public int SpeakerHotkey { get; set; } = 83; // S
     public int SpeakerModifiers { get; set; } = 1; // Alt
+
     public bool StartMinimized { get; set; } = false;
     public bool MinimizeToTrayOnClose { get; set; } = false;
     public bool AutoStart { get; set; } = false;
@@ -44,8 +50,6 @@ public class AppSettings
 
     public List<AudioScenario> Scenarios { get; set; } = new();
 
-
-
     public static AppSettings Load()
     {
         if (!System.IO.File.Exists(SettingsPath))
@@ -54,7 +58,46 @@ public class AppSettings
         try
         {
             var json = System.IO.File.ReadAllText(SettingsPath);
-            return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            
+            // Миграция
+            if (settings.Devices.Count == 0)
+            {
+                if (!string.IsNullOrEmpty(settings.HeadsetDeviceId) || !string.IsNullOrEmpty(settings.HeadsetDeviceName))
+                {
+                    settings.Devices.Add(new ManagedAudioDevice 
+                    { 
+                        Id = Guid.NewGuid().ToString(), 
+                        DeviceId = settings.HeadsetDeviceId, 
+                        CustomName = string.IsNullOrEmpty(settings.HeadsetDeviceName) ? "Наушники" : settings.HeadsetDeviceName, 
+                        Hotkey = settings.HeadsetHotkey, 
+                        Modifiers = settings.HeadsetModifiers 
+                    });
+                }
+                if (!string.IsNullOrEmpty(settings.SpeakerDeviceId) || !string.IsNullOrEmpty(settings.SpeakerDeviceName))
+                {
+                    settings.Devices.Add(new ManagedAudioDevice 
+                    { 
+                        Id = Guid.NewGuid().ToString(), 
+                        DeviceId = settings.SpeakerDeviceId, 
+                        CustomName = string.IsNullOrEmpty(settings.SpeakerDeviceName) ? "Колонки" : settings.SpeakerDeviceName, 
+                        Hotkey = settings.SpeakerHotkey, 
+                        Modifiers = settings.SpeakerModifiers 
+                    });
+                }
+                // Очищаем, чтобы миграция не дублировалась
+                settings.HeadsetDeviceId = string.Empty;
+                settings.SpeakerDeviceId = string.Empty;
+                settings.HeadsetDeviceName = string.Empty;
+                settings.SpeakerDeviceName = string.Empty;
+                
+                if (settings.Devices.Count > 0)
+                {
+                    settings.Save(); // сохраняем сразу
+                }
+            }
+
+            return settings;
         }
         catch
         {

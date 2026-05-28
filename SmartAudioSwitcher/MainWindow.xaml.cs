@@ -23,8 +23,9 @@ public partial class MainWindow : Window
     private readonly AppController _appController;
     private SettingsWindow? _settingsWindow;
 
-    private bool _isCapturingHeadsetKey;
-    private bool _isCapturingSpeakerKey;
+    public System.Collections.ObjectModel.ObservableCollection<AudioDevice> AvailableDevices { get; } = new();
+    private string? _capturingDeviceId = null;
+
     private bool _isCapturingMicKey;
     private bool _isCapturingVolUpKey;
     private bool _isCapturingVolDownKey;
@@ -114,8 +115,8 @@ public partial class MainWindow : Window
         _autoSwitcher.UpdateSettings(_settings);
         UpdateAdaptiveLayout();
 
-        UpdateHotkeyButton(BtnHotkeyHeadset, _settings.HeadsetHotkey, _settings.HeadsetModifiers);
-        UpdateHotkeyButton(BtnHotkeySpeakers, _settings.SpeakerHotkey, _settings.SpeakerModifiers);
+        UpdateAdaptiveLayout();
+
         UpdateHotkeyButton(BtnHotkeyMic, _settings.MicMuteHotkey, _settings.MicMuteModifiers);
         UpdateHotkeyButton(BtnHotkeyVolUp, _settings.VolUpHotkey, _settings.VolUpModifiers);
         UpdateHotkeyButton(BtnHotkeyVolDown, _settings.VolDownHotkey, _settings.VolDownModifiers);
@@ -140,29 +141,26 @@ public partial class MainWindow : Window
     {
         var devices = AudioDeviceManager.GetActiveDevices();
         
-        var headsetId = ResolveDeviceId(devices, _settings.HeadsetDeviceId, _settings.HeadsetDeviceName);
-        var speakerId = ResolveDeviceId(devices, _settings.SpeakerDeviceId, _settings.SpeakerDeviceName);
+        AvailableDevices.Clear();
+        foreach (var d in devices)
+        {
+            AvailableDevices.Add(d);
+        }
+
+        foreach (var md in _settings.Devices)
+        {
+            if (!string.IsNullOrWhiteSpace(md.DeviceId) && !devices.Any(d => d.Id == md.DeviceId))
+            {
+                var name = string.IsNullOrWhiteSpace(md.CustomName) ? "Неизвестно" : md.CustomName;
+                AvailableDevices.Insert(0, new AudioDevice { Id = md.DeviceId, Name = $"[Отключено] {name}", IsActive = false });
+            }
+        }
+
         var targetId = (CmbTargetDevice.SelectedItem as AudioDevice)?.Id;
-
-        // Inject disconnected devices if missing
-        if (!string.IsNullOrWhiteSpace(headsetId) && !devices.Any(d => d.Id == headsetId))
-        {
-            var name = string.IsNullOrWhiteSpace(_settings.HeadsetDeviceName) ? "Неизвестно" : _settings.HeadsetDeviceName;
-            devices.Insert(0, new AudioDevice { Id = headsetId, Name = $"[Отключено] {name}", IsActive = false });
-        }
         
-        if (!string.IsNullOrWhiteSpace(speakerId) && headsetId != speakerId && !devices.Any(d => d.Id == speakerId))
-        {
-            var name = string.IsNullOrWhiteSpace(_settings.SpeakerDeviceName) ? "Неизвестно" : _settings.SpeakerDeviceName;
-            devices.Insert(0, new AudioDevice { Id = speakerId, Name = $"[Отключено] {name}", IsActive = false });
-        }
-
-        CmbHeadset.ItemsSource = devices;
-        CmbSpeakers.ItemsSource = devices;
-        CmbTargetDevice.ItemsSource = devices;
-
-        SelectDevice(CmbHeadset, headsetId);
-        SelectDevice(CmbSpeakers, speakerId);
+        CmbTargetDevice.ItemsSource = AvailableDevices;
+        DevicesList.ItemsSource = null;
+        DevicesList.ItemsSource = _settings.Devices;
         
         if (targetId != null)
         {
@@ -213,29 +211,41 @@ public partial class MainWindow : Window
             .ToList();
     }
 
-    private void CmbHeadset_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void CmbDevice_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing || CmbHeadset.SelectedItem is not AudioDevice headset)
-        {
-            return;
-        }
-
-        _settings.HeadsetDeviceId = headset.Id;
-        if (headset.IsActive) _settings.HeadsetDeviceName = headset.Name;
+        if (_isInitializing) return;
         PersistSettings();
     }
 
-    private void CmbSpeakers_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void BtnAddDevice_Click(object sender, RoutedEventArgs e)
     {
-        if (_isInitializing || CmbSpeakers.SelectedItem is not AudioDevice speakers)
-        {
-            return;
-        }
-
-        _settings.SpeakerDeviceId = speakers.Id;
-        if (speakers.IsActive) _settings.SpeakerDeviceName = speakers.Name;
-        _autoSwitcher.UpdateSettings(_settings);
+        _settings.Devices.Add(new ManagedAudioDevice { CustomName = "Новое устройство" });
+        LoadDevices();
         PersistSettings();
+    }
+
+    private void BtnRemoveDevice_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string id })
+        {
+            var device = _settings.Devices.FirstOrDefault(d => d.Id == id);
+            if (device != null)
+            {
+                _settings.Devices.Remove(device);
+                _appController.RegisterHotkeys();
+                LoadDevices();
+                PersistSettings();
+            }
+        }
+    }
+
+    private void BtnHotkeyDevice_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string id } btn)
+        {
+            _capturingDeviceId = id;
+            KeyDown += MainWindow_KeyDown;
+        }
     }
 
     private void CmbTargetDevice_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -649,19 +659,7 @@ public partial class MainWindow : Window
         return normalized;
     }
 
-    private void BtnHotkeyHeadset_Click(object sender, RoutedEventArgs e)
-    {
-        BtnHotkeyHeadset.Content = "Нажмите клавиши...";
-        _isCapturingHeadsetKey = true;
-        KeyDown += MainWindow_KeyDown;
-    }
 
-    private void BtnHotkeySpeakers_Click(object sender, RoutedEventArgs e)
-    {
-        BtnHotkeySpeakers.Content = "Нажмите клавиши...";
-        _isCapturingSpeakerKey = true;
-        KeyDown += MainWindow_KeyDown;
-    }
 
     private void BtnHotkeyMic_Click(object sender, RoutedEventArgs e)
     {
@@ -708,23 +706,20 @@ public partial class MainWindow : Window
 
     private void MainWindow_KeyDown(object sender, KeyEventArgs e)
     {
-        if (!_isCapturingHeadsetKey && !_isCapturingSpeakerKey && !_isCapturingMicKey && !_isCapturingVolUpKey && !_isCapturingVolDownKey && !_isCapturingPrevTrackKey && !_isCapturingNextTrackKey && !_isCapturingPlayPauseKey)
+        if (_capturingDeviceId == null && !_isCapturingMicKey && !_isCapturingVolUpKey && !_isCapturingVolDownKey && !_isCapturingPrevTrackKey && !_isCapturingNextTrackKey && !_isCapturingPlayPauseKey)
         {
             return;
         }
 
         if (e.Key == Key.Escape)
         {
-            _isCapturingHeadsetKey = false;
-            _isCapturingSpeakerKey = false;
+            _capturingDeviceId = null;
             _isCapturingMicKey = false;
             _isCapturingVolUpKey = false;
             _isCapturingVolDownKey = false;
             _isCapturingPrevTrackKey = false;
             _isCapturingNextTrackKey = false;
             _isCapturingPlayPauseKey = false;
-            UpdateHotkeyButton(BtnHotkeyHeadset, _settings.HeadsetHotkey, _settings.HeadsetModifiers);
-            UpdateHotkeyButton(BtnHotkeySpeakers, _settings.SpeakerHotkey, _settings.SpeakerModifiers);
             UpdateHotkeyButton(BtnHotkeyMic, _settings.MicMuteHotkey, _settings.MicMuteModifiers);
             UpdateHotkeyButton(BtnHotkeyVolUp, _settings.VolUpHotkey, _settings.VolUpModifiers);
             UpdateHotkeyButton(BtnHotkeyVolDown, _settings.VolDownHotkey, _settings.VolDownModifiers);
@@ -734,7 +729,6 @@ public partial class MainWindow : Window
             KeyDown -= MainWindow_KeyDown;
             return;
         }
-
 
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
         if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin)
@@ -751,19 +745,15 @@ public partial class MainWindow : Window
 
         var vk = KeyInterop.VirtualKeyFromKey(key);
 
-        if (_isCapturingHeadsetKey)
+        if (_capturingDeviceId != null)
         {
-            _settings.HeadsetHotkey = vk;
-            _settings.HeadsetModifiers = mods;
-            UpdateHotkeyButton(BtnHotkeyHeadset, vk, mods);
-            _isCapturingHeadsetKey = false;
-        }
-        else if (_isCapturingSpeakerKey)
-        {
-            _settings.SpeakerHotkey = vk;
-            _settings.SpeakerModifiers = mods;
-            UpdateHotkeyButton(BtnHotkeySpeakers, vk, mods);
-            _isCapturingSpeakerKey = false;
+            var device = _settings.Devices.FirstOrDefault(d => d.Id == _capturingDeviceId);
+            if (device != null)
+            {
+                device.Hotkey = vk;
+                device.Modifiers = mods;
+            }
+            _capturingDeviceId = null;
         }
         else if (_isCapturingMicKey)
         {
