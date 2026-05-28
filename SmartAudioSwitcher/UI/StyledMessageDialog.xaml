@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Smart Audio Switcher"
         Width="420"
-        Height="230"
+        MinHeight="160"
+        SizeToContent="Height"
         WindowStyle="None"
         AllowsTransparency="True"
         ResizeMode="NoResize"
@@ -36,21 +37,24 @@
                         Click="BtnClose_Click"/>
             </Grid>
 
-            <Grid Grid.Row="1" Margin="20,8,20,0">
+            <Grid Grid.Row="1" Margin="20,8,20,0" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <Border x:Name="SeverityMarker"
+                        VerticalAlignment="Top"
                         Width="14"
                         Height="14"
                         CornerRadius="7"
-                        Margin="0,4,10,0"
+                        Margin="0,5,15,0"
                         Background="#6C63FF"/>
                 <TextBlock x:Name="LblMessage"
                            Grid.Column="1"
+                           VerticalAlignment="Top"
                            FontFamily="Segoe UI"
+                           FontSize="14"
                            Foreground="White"
                            TextWrapping="Wrap"/>
             </Grid>
