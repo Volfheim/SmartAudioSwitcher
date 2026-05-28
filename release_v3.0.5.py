@@ -10,7 +10,7 @@ if not TOKEN:
     sys.exit(1)
 
 REPO = "Volfheim/SmartAudioSwitcher"
-TAG = "v3.0.4"
+TAG = "v3.0.5"
 
 headers = {
     "Authorization": f"token {TOKEN}",
@@ -46,7 +46,7 @@ release = request(
     method="POST",
     data={
         "tag_name": TAG,
-        "name": "SmartAudioSwitcher v3.0.2",
+        "name": "SmartAudioSwitcher",
         "body": release_body,
         "target_commitish": "master"
     }
